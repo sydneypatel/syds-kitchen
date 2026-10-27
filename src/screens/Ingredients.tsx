@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, Empty, Header, Icon, Page, Title, toast } from "../components/ui";
-import { daysUntil, sameFood } from "../lib/food";
+import { daysUntil, estimateExpiry, sameFood } from "../lib/food";
 import { useStore } from "../lib/store";
 import { MAIN_STORAGES, STORAGES, STORAGE_LABEL, type PantryItem, type Storage } from "../lib/types";
 
@@ -47,9 +47,15 @@ function FlavorShelf() {
 }
 
 export function Ingredients() {
-  const { pantry_items, shopping_items, addPantry, removePantry } = useStore();
+  const { pantry_items, shopping_items, addPantry, removePantry, updatePantry } = useStore();
   const [draft, setDraft] = useState("");
   const [storage, setStorage] = useState<Storage | "Auto">("Auto");
+  // Items added before dates were estimated automatically, which we can still estimate.
+  const undated = pantry_items.filter((p) => !p.expires_on && estimateExpiry(p.name, p.storage));
+  const fillDates = () => {
+    undated.forEach((p) => updatePantry(p.id, { expires_on: estimateExpiry(p.name, p.storage) }));
+    toast(`Added estimated dates to ${undated.length} item${undated.length === 1 ? "" : "s"}`);
+  };
   const toBuy = shopping_items.filter((s) => !s.checked).length;
   const food = pantry_items.filter((p) => p.storage !== "Spices");
 
@@ -65,7 +71,7 @@ export function Ingredients() {
   return <main>
     <Header title="Ingredients" right={<a href="#/shopping" aria-label="Open shopping list" className="relative icon-btn lg:hidden"><Icon name="bag" />{toBuy > 0 && <span className="absolute -right-0.5 -top-0.5 grid size-4 place-items-center rounded-full bg-coral text-[.6rem] text-white">{toBuy}</span>}</a>} />
     <Page>
-      <Title title="What you have" copy="Keep this list current and we’ll show recipes that use it well. Tip: paste a few at once, separated by commas. Spices and sauces sort themselves onto your flavor shelf." />
+      <Title title="What you have" copy="Keep this list current and we’ll show recipes that use it well. Fresh items get an estimated use-by date (tap it to change), so Claude uses what goes off first. Tip: paste a few at once, separated by commas." />
       <div className="mt-5 flex flex-col gap-2 sm:flex-row">
         <input className="field" placeholder="Add an ingredient (e.g. eggs, spinach, rice)" value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} />
         <div className="flex gap-2">
@@ -73,6 +79,8 @@ export function Ingredients() {
           <Button onClick={add} disabled={!draft.trim()} className="!px-3.5"><Icon name="plus" /><span className="sm:hidden lg:inline">Add</span></Button>
         </div>
       </div>
+
+      {undated.length > 0 && <div className="mt-5 flex flex-col gap-3 rounded-2xl bg-[#fff2ec] p-4 sm:flex-row sm:items-center"><p className="flex-1 text-sm leading-5 text-[#a53f28]"><b>{undated.length} item{undated.length === 1 ? " has" : "s have"} no use-by date.</b> Add typical estimates so Claude knows what to use first? You can tweak any of them.</p><Button variant="coral" onClick={fillDates} className="!min-h-10 shrink-0 !py-2"><Icon name="clock" size={16} /> Estimate dates</Button></div>}
 
       {food.length === 0 ? <div className="mt-6"><Empty title="Your kitchen is empty" copy="Add what's in your fridge, freezer and cupboard. Recipes will show what you have and what you still need." /></div>
         : <div className="mt-6 grid gap-5 lg:grid-cols-3">{groups.map(({ s, items }) => <section key={s}>

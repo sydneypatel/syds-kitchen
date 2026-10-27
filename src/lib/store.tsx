@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Backend } from "./backend";
-import { guessAisle, guessStorage, inPantry, sameFood, titleCase, uid } from "./food";
+import { estimateExpiry, guessAisle, guessStorage, inPantry, sameFood, titleCase, uid } from "./food";
 import type { Aisle, Data, PantryItem, PlanEntry, Profile, Recipe, RecipeDraft, ShoppingItem, Storage } from "./types";
 
 type Store = Data & {
@@ -55,10 +55,12 @@ export function StoreProvider({ initial, backend, children }: { initial: Data; b
         set((d) => ({ ...d, profile }));
         persist(backend.saveProfile(profile));
       },
-      addPantry(name, storage, expires_on = null) {
+      addPantry(name, storage, expires_on) {
         const clean = titleCase(name);
         if (!clean || ref.current.pantry_items.some((p) => p.name.toLowerCase() === clean.toLowerCase())) return;
-        const row: PantryItem = { id: uid(), name: clean, storage: storage ?? guessStorage(clean), expires_on, created_at: now() };
+        const where = storage ?? guessStorage(clean);
+        // No date given: fill in a typical use-by estimate (editable on the Ingredients page).
+        const row: PantryItem = { id: uid(), name: clean, storage: where, expires_on: expires_on === undefined ? estimateExpiry(clean, where) : expires_on, created_at: now() };
         set((d) => ({ ...d, pantry_items: [...d.pantry_items, row] }));
         persist(backend.insert("pantry_items", row));
       },

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { TimingCard } from "../components/RecipeCard";
 import { Button, Empty, Header, Icon, Page, Title } from "../components/ui";
-import { daysUntil, missingFor, totalMinutes } from "../lib/food";
+import { daysUntil, missingFor, perishablesForClaude, sameFood, totalMinutes } from "../lib/food";
 import { putDraft } from "../lib/router";
 import { suggestRecipes } from "../lib/sources";
 import { useStore } from "../lib/store";
@@ -17,16 +17,18 @@ export function MealOptions({ minutes }: { minutes: number }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Items within 3 days of their use-by date: recipes that use them rank higher.
+  const soon = pantry_items.filter((p) => p.storage !== "Spices" && (daysUntil(p.expires_on) ?? 99) <= 3);
   const fits = recipes
     .filter((r) => totalMinutes(r, profile.eat_minutes) <= minutes)
-    .map((r) => ({ r, missing: missingFor(r, pantry_items).length }))
-    .sort((a, b) => a.missing - b.missing || totalMinutes(a.r) - totalMinutes(b.r));
+    .map((r) => ({ r, missing: missingFor(r, pantry_items).length, urgent: r.ingredients.filter((i) => soon.some((p) => sameFood(p.name, i.name))).length }))
+    .sort((a, b) => a.missing - b.missing || b.urgent - a.urgent || totalMinutes(a.r) - totalMinutes(b.r));
 
   const getIdeas = async () => {
     setBusy(true);
     setError(null);
     try {
-      const useSoon = pantry_items.filter((p) => { const d = daysUntil(p.expires_on); return d !== null && d <= 3; }).map((p) => p.name);
+      const useSoon = perishablesForClaude(pantry_items);
       const drafts = await suggestRecipes({ minutes, pantry: pantry_items.filter((p) => p.storage !== "Spices").map((p) => p.name), staples: pantry_items.filter((p) => p.storage === "Spices").map((p) => p.name), useSoon, profile, request: ask.trim() || undefined });
       const next = [...drafts.map((draft) => ({ draftId: putDraft(draft), draft })), ...ideas];
       ideaCache.set(minutes, next);

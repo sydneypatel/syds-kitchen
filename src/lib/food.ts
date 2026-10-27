@@ -45,8 +45,8 @@ export function totalMinutes(recipe: Pick<Recipe, "prep" | "cook" | "clean">, ea
 }
 
 const AISLE_WORDS: Record<Exclude<Aisle, "Other">, string[]> = {
-  Produce: ["apple", "avocado", "banana", "basil", "bean sprout", "bell pepper", "berry", "broccoli", "cabbage", "carrot", "cauliflower", "celery", "chili", "cilantro", "corn", "cucumber", "eggplant", "garlic", "ginger", "green onion", "herb", "kale", "leek", "lemon", "lettuce", "lime", "mango", "mint", "mushroom", "onion", "orange", "parsley", "pea", "potato", "scallion", "shallot", "spinach", "squash", "sweet potato", "thyme", "tomato", "zucchini", "arugula", "beet", "jalapeno", "rosemary", "dill", "fruit", "salad", "greens"],
-  Refrigerated: ["butter", "cheese", "chicken", "cream", "egg", "feta", "milk", "mozzarella", "parmesan", "yogurt", "tofu", "tempeh", "beef", "pork", "salmon", "fish", "shrimp", "turkey", "sausage", "bacon", "ham", "hummus", "tortilla", "paneer", "lamb", "steak", "cheddar", "ricotta"],
+  Produce: ["apple", "avocado", "banana", "basil", "bean sprout", "bell pepper", "berry", "broccoli", "cabbage", "carrot", "cauliflower", "celery", "chili", "cilantro", "corn", "cucumber", "eggplant", "garlic", "ginger", "green onion", "herb", "kale", "leek", "lemon", "lettuce", "lime", "mango", "mint", "mushroom", "onion", "orange", "parsley", "pea", "potato", "scallion", "shallot", "spinach", "squash", "sweet potato", "thyme", "tomato", "zucchini", "arugula", "beet", "jalapeno", "rosemary", "dill", "fruit", "salad", "greens", "strawberry", "blueberry", "raspberry", "blackberry", "grape", "pear"],
+  Refrigerated: ["leftover", "butter", "cheese", "chicken", "cream", "egg", "feta", "milk", "mozzarella", "parmesan", "yogurt", "tofu", "tempeh", "beef", "pork", "salmon", "fish", "shrimp", "turkey", "sausage", "bacon", "ham", "hummus", "tortilla", "paneer", "lamb", "steak", "cheddar", "ricotta"],
   Frozen: ["ice cream", "edamame"],
   Pantry: ["bread", "broth", "stock", "can", "chickpea", "bean", "lentil", "flour", "honey", "noodle", "oat", "oil", "pasta", "spaghetti", "penne", "rice", "quinoa", "sauce", "sesame", "soy", "spice", "sugar", "tahini", "vinegar", "cumin", "paprika", "cinnamon", "nut", "almond", "peanut", "seed", "maple", "coconut milk", "curry", "salsa", "cereal", "cracker", "mustard", "ketchup", "mayo", "tuna", "oregano", "turmeric", "powder", "syrup", "couscous"],
 };
@@ -68,7 +68,7 @@ const SEASONINGS = ["salt", "pepper", "cumin", "paprika", "turmeric", "cinnamon"
 export function isSeasoning(name: string) {
   const raw = name.toLowerCase();
   if (/\b(powder|spice|spices|seasoning|sauce|oil|vinegar|flakes|rub|dressing|condiment)\b/.test(raw)) return true;
-  return SEASONINGS.some((w) => new RegExp(`\\b${w}\\b`).test(raw)) && !/\b(fresh|bell|jalape|greens|leaves)/.test(raw.replace("bay leaves", "bay"));
+  return SEASONINGS.some((w) => new RegExp(`\\b${w}\\b`).test(raw)) && !/\b(fresh|bell|jalape|greens|leaves|leftover)/.test(raw.replace("bay leaves", "bay"));
 }
 
 export function guessStorage(name: string): PantryItem["storage"] {
@@ -115,4 +115,49 @@ export function addDays(d: Date, n: number) {
 
 export function uid() {
   return crypto.randomUUID();
+}
+
+/* ---------------- Typical shelf life (estimates you can edit) ---------------- */
+
+// [days, words]. First match wins, so specific items come before general ones.
+const SHELF_LIFE: [number, string[]][] = [
+  [2, ["chicken", "turkey", "ground beef", "ground pork", "ground meat", "mince", "fish", "salmon", "tuna steak", "cod", "tilapia", "shrimp", "scallop", "seafood"]],
+  [3, ["beef", "steak", "pork", "lamb", "fresh pasta", "raspberry"]],
+  [4, ["berry", "strawberry", "blueberry", "blackberry", "avocado", "leftover", "bean sprout"]],
+  [5, ["spinach", "lettuce", "arugula", "salad", "greens", "kale", "basil", "cilantro", "parsley", "mint", "dill", "herb", "mushroom", "tofu", "bread", "bagel", "banana", "deli", "scallion", "green onion", "asparagus"]],
+  [14, ["sour cream", "cream cheese", "greek yogurt"]],
+  [7, ["milk", "cream", "half and half", "ricotta", "mozzarella", "feta", "burrata", "goat cheese", "cottage cheese", "hummus", "tomato", "cucumber", "zucchini", "bell pepper", "pepper", "eggplant", "broccoli", "cauliflower", "green bean", "corn", "pea", "bacon", "sausage", "ham", "hot dog", "salsa", "pesto", "tempeh"]],
+  [14, ["yogurt", "sour cream", "cream cheese", "carrot", "celery", "cabbage", "tortilla", "pita", "grape", "orange", "ginger", "jalapeno", "jalapeño", "brussels"]],
+  [21, ["lemon", "lime", "apple", "pear", "beet", "radish"]],
+  [28, ["egg", "cheddar", "parmesan", "gouda", "swiss", "cheese", "butter"]],
+  [30, ["onion", "shallot", "garlic", "potato", "sweet potato", "squash", "pumpkin"]],
+];
+
+/** Things that go off even when kept in the cupboard. */
+const PANTRY_PERISHABLE = /\b(bread|bagel|banana|avocado|tomato|onion|shallot|garlic|potato|squash|pumpkin|tortilla|pita|apple|orange|lemon|lime|leftover)\b/;
+
+/** Estimated days until something goes off, or null for shelf-stable things (rice, cans, spices). */
+export function shelfLifeDays(name: string, storage: PantryItem["storage"]): number | null {
+  if (storage === "Spices") return null;
+  if (storage === "Freezer") return 90;
+  const n = normalize(name);
+  if (storage === "Pantry" && !PANTRY_PERISHABLE.test(n)) return null; // cans, grains, jars
+  const has = (w: string) => { const k = normalize(w); return !!k && new RegExp(`\\b${k}\\b`).test(n); };
+  for (const [days, words] of SHELF_LIFE) if (words.some(has)) return days;
+  return storage === "Fridge" ? 7 : null;
+}
+
+export function estimateExpiry(name: string, storage: PantryItem["storage"]): string | null {
+  const days = shelfLifeDays(name, storage);
+  return days === null ? null : isoDay(addDays(new Date(), days));
+}
+
+/** Perishables, most urgent first, as "spinach (2 days left)" for Claude. */
+export function perishablesForClaude(items: PantryItem[], withinDays = 10): string[] {
+  return items
+    .filter((p) => p.storage !== "Spices" && p.storage !== "Freezer")
+    .map((p) => ({ p, d: daysUntil(p.expires_on) }))
+    .filter((x): x is { p: PantryItem; d: number } => x.d !== null && x.d <= withinDays)
+    .sort((a, b) => a.d - b.d)
+    .map(({ p, d }) => `${p.name} (${d < 0 ? "past its date, check it" : d === 0 ? "use today" : `${d} day${d === 1 ? "" : "s"} left`})`);
 }
