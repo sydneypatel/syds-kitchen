@@ -6,7 +6,7 @@ const STAPLES = ["salt", "pepper", "black pepper", "water", "olive oil", "oil", 
 const DESCRIPTORS = /\b(fresh|large|small|medium|chopped|diced|minced|sliced|ground|dried|frozen|canned|raw|cooked|boneless|skinless|ripe|extra|virgin|organic|whole|finely|roughly|to taste|optional|of|a|an|the|and)\b/g;
 
 export function normalize(name: string): string {
-  let s = name.toLowerCase().replace(/\(.*?\)/g, " ").replace(/[^a-z\s-]/g, " ").replace(DESCRIPTORS, " ").replace(/\s+/g, " ").trim();
+  let s = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\(.*?\)/g, " ").replace(/[^a-z\s-]/g, " ").replace(DESCRIPTORS, " ").replace(/\s+/g, " ").trim();
   s = s
     .split(" ")
     .map((w) => (w.endsWith("ies") ? w.slice(0, -3) + "y" : w.endsWith("oes") ? w.slice(0, -2) : w.length > 3 && w.endsWith("s") && !w.endsWith("ss") ? w.slice(0, -1) : w))
@@ -54,7 +54,7 @@ const AISLE_WORDS: Record<Exclude<Aisle, "Other">, string[]> = {
 export function guessAisle(name: string): Aisle {
   const n = normalize(name);
   if (/\bfrozen\b/i.test(name)) return "Frozen";
-  if (/\b(powder|dried|canned|can|jar|paste|flakes|coconut milk)\b/i.test(name)) return "Pantry";
+  if (/\b(powder|dried|canned|can|jar|paste|flakes|coconut milk|peanut butter|almond butter|nut butter)\b/i.test(name)) return "Pantry";
   const has = (w: string) => { const k = normalize(w); return !!k && new RegExp(`\\b${k}\\b`).test(n); };
   for (const aisle of ["Refrigerated", "Frozen", "Produce", "Pantry"] as const) {
     if (AISLE_WORDS[aisle].some(has)) return aisle;
@@ -62,7 +62,17 @@ export function guessAisle(name: string): Aisle {
   return "Other";
 }
 
+/** Spices, sauces, oils, vinegars and condiments: the "flavor shelf". */
+const SEASONINGS = ["salt", "pepper", "cumin", "paprika", "turmeric", "cinnamon", "nutmeg", "oregano", "chili", "chilli", "cayenne", "coriander", "cardamom", "clove", "garam masala", "masala", "curry", "za'atar", "zaatar", "sumac", "allspice", "bay leaf", "bay leaves", "italian seasoning", "everything bagel", "fennel seed", "mustard seed", "sesame seed", "red pepper flakes", "vanilla", "msg", "bouillon", "stock cube", "soy sauce", "tamari", "fish sauce", "oyster sauce", "hoisin", "sriracha", "hot sauce", "gochujang", "miso", "harissa", "pesto", "ketchup", "mustard", "mayo", "mayonnaise", "bbq sauce", "barbecue sauce", "worcestershire", "teriyaki", "chili crisp", "chili oil", "salsa", "honey", "maple syrup", "vinegar", "olive oil", "sesame oil", "vegetable oil", "canola oil", "avocado oil", "coconut oil", "ghee"];
+
+export function isSeasoning(name: string) {
+  const raw = name.toLowerCase();
+  if (/\b(powder|spice|spices|seasoning|sauce|oil|vinegar|flakes|rub|dressing|condiment)\b/.test(raw)) return true;
+  return SEASONINGS.some((w) => new RegExp(`\\b${w}\\b`).test(raw)) && !/\b(fresh|bell|jalape|greens|leaves)/.test(raw.replace("bay leaves", "bay"));
+}
+
 export function guessStorage(name: string): PantryItem["storage"] {
+  if (isSeasoning(name)) return "Spices";
   const aisle = guessAisle(name);
   if (aisle === "Frozen") return "Freezer";
   if (aisle === "Refrigerated" || aisle === "Produce") return "Fridge";

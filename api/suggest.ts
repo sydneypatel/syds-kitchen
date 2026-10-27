@@ -6,6 +6,7 @@ type Env = Record<string, string | undefined>;
 type SuggestBody = {
   minutes?: number;
   pantry?: string[];
+  staples?: string[];
   useSoon?: string[];
   eatMinutes?: number;
   count?: number;
@@ -86,6 +87,7 @@ export async function handleSuggest(request: Request, env: Env, opts: { skipAuth
     `Suggest ${count} recipes for a grad student cooking in a small shared apartment kitchen.`,
     `Time budget: ${minutes} minutes total, which includes about ${eat} minutes to eat. So prep + cook + cleanup must be at most ${Math.max(minutes - eat, 10)} minutes.`,
     `Ingredients on hand: ${list(body.pantry?.slice(0, 80))}.`,
+    body.staples?.length ? `Spices, sauces and oils on hand (use these for flavor; avoid calling for seasonings not on this list unless essential): ${body.staples.slice(0, 80).join(", ")}.` : "",
     body.useSoon?.length ? `Use these soon (they expire first): ${body.useSoon.join(", ")}.` : "",
     `Diet: ${list(p.diets)}. Avoid: ${list(p.avoid)}. Favorite cuisines: ${list(p.cuisines)}. Kitchen: ${list(p.kitchen)}. Skill: ${list(p.skill)}.`,
     p.notes ? `Other notes: ${p.notes}` : "",

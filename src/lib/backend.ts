@@ -35,8 +35,11 @@ export function supabaseBackend(sb: SupabaseClient, userId: string, email: strin
       ]);
       let p = check(profile) as Profile | null;
       if (!p) {
-        p = { ...DEFAULT_PROFILE, id: userId, name: email.split("@")[0] };
-        check(await sb.from("profiles").insert(p));
+        // First sign-in: create the profile. ignoreDuplicates makes this safe if two loads race
+        // (or a profile already exists), then re-read so we always use the stored row.
+        const fresh = { ...DEFAULT_PROFILE, id: userId, name: email.split("@")[0] };
+        check(await sb.from("profiles").upsert(fresh, { onConflict: "id", ignoreDuplicates: true }));
+        p = (check(await sb.from("profiles").select("*").eq("id", userId).maybeSingle()) as Profile | null) ?? fresh;
       }
       return {
         profile: p,

@@ -15,6 +15,7 @@ export function Home() {
   const { profile, pantry_items, recipes, plan_entries } = useStore();
   const [minutes, setMinutes] = useState(45);
   const initials = (profile.name || "Me").split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  const food = pantry_items.filter((p) => p.storage !== "Spices");
   const useSoon = pantry_items.map((p) => ({ ...p, d: daysUntil(p.expires_on) })).filter((p) => p.d !== null && p.d <= 3).sort((a, b) => a.d! - b.d!);
   const today = plan_entries.filter((p) => p.day === isoDay(new Date())).map((p) => recipes.find((r) => r.id === p.recipe_id)).filter(Boolean);
   const inspo = [...recipes].sort((a, b) => Number(b.favorite) - Number(a.favorite)).slice(0, 8);
@@ -24,7 +25,7 @@ export function Home() {
     <Page>
       <div className="eyebrow">{greeting()}</div>
       <h1 className="mt-2 font-display text-[2.35rem] leading-[1.08] lg:text-[3rem]">What can we make{profile.name ? `, ${profile.name.split(" ")[0]}` : ""}?</h1>
-      <p className="mt-3 leading-6 text-muted">{pantry_items.length ? `You have ${pantry_items.length} ingredient${pantry_items.length === 1 ? "" : "s"} ready to become dinner.` : "Add what's in your fridge and we'll find meals that use it."}</p>
+      <p className="mt-3 leading-6 text-muted">{food.length ? `You have ${food.length} ingredient${food.length === 1 ? "" : "s"} ready to become dinner.` : "Add what's in your fridge and we'll find meals that use it."}</p>
 
       <div className="mt-7 grid gap-5 lg:grid-cols-[1.25fr_1fr]">
         <section className="relative overflow-hidden rounded-[1.75rem] bg-forest p-6 text-white lg:p-8">
@@ -40,7 +41,7 @@ export function Home() {
         <div className="space-y-4">
           <a href="#/ingredients" className="flex w-full items-center gap-4 rounded-3xl bg-white p-4 text-left shadow-soft">
             <span className="grid size-12 place-items-center rounded-2xl bg-sage text-forest"><Icon name="ingredients" /></span>
-            <span className="flex-1"><span className="block font-bold">Your kitchen</span><span className="mt-0.5 block text-sm text-muted">{pantry_items.length} ingredients available</span></span><Icon name="arrow" size={18} />
+            <span className="flex-1"><span className="block font-bold">Your kitchen</span><span className="mt-0.5 block text-sm text-muted">{food.length} ingredients · {pantry_items.length - food.length} spices & sauces</span></span><Icon name="arrow" size={18} />
           </a>
           <a href="#/plan" className="flex w-full items-center gap-4 rounded-3xl bg-white p-4 text-left shadow-soft">
             <span className="grid size-12 place-items-center rounded-2xl bg-sand text-coral"><Icon name="calendar" /></span>

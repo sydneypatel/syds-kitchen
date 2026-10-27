@@ -1,8 +1,11 @@
 export type Aisle = "Produce" | "Pantry" | "Refrigerated" | "Frozen" | "Other";
 export const AISLES: Aisle[] = ["Produce", "Pantry", "Refrigerated", "Frozen", "Other"];
 
-export type Storage = "Fridge" | "Freezer" | "Pantry";
-export const STORAGES: Storage[] = ["Fridge", "Freezer", "Pantry"];
+export type Storage = "Fridge" | "Freezer" | "Pantry" | "Spices";
+export const STORAGES: Storage[] = ["Fridge", "Freezer", "Pantry", "Spices"];
+/** Where food lives; spices, sauces and oils get their own section. */
+export const MAIN_STORAGES: Storage[] = ["Fridge", "Freezer", "Pantry"];
+export const STORAGE_LABEL: Record<Storage, string> = { Fridge: "Fridge", Freezer: "Freezer", Pantry: "Pantry", Spices: "Spices, sauces & oils" };
 
 export type Ingredient = { name: string; qty?: string };
 

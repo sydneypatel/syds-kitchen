@@ -73,7 +73,7 @@ export async function getMeal(id: string): Promise<RecipeDraft> {
 
 /* ---------------- Claude suggestions (via /api/suggest) ---------------- */
 
-export async function suggestRecipes(args: { minutes: number; pantry: string[]; useSoon: string[]; profile: Profile; count?: number; request?: string }): Promise<RecipeDraft[]> {
+export async function suggestRecipes(args: { minutes: number; pantry: string[]; staples: string[]; useSoon: string[]; profile: Profile; count?: number; request?: string }): Promise<RecipeDraft[]> {
   const session = supabase ? (await supabase.auth.getSession()).data.session : null;
   const res = await fetch("/api/suggest", {
     method: "POST",
@@ -81,6 +81,7 @@ export async function suggestRecipes(args: { minutes: number; pantry: string[]; 
     body: JSON.stringify({
       minutes: args.minutes,
       pantry: args.pantry,
+      staples: args.staples,
       useSoon: args.useSoon,
       eatMinutes: args.profile.eat_minutes,
       count: args.count ?? 3,
