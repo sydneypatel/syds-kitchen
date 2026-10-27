@@ -66,6 +66,8 @@ export type Profile = {
   kitchen: string[];
   inspiration: string[];
   skill: string[];
+  living: string[];
+  style: string[];
   notes: string;
   eat_minutes: number;
   store: string;
@@ -96,6 +98,8 @@ export const DEFAULT_PROFILE: Omit<Profile, "id"> = {
   kitchen: [],
   inspiration: [],
   skill: [],
+  living: [],
+  style: [],
   notes: "",
   eat_minutes: 15,
   store: "",

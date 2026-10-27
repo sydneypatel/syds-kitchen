@@ -86,7 +86,7 @@ export async function suggestRecipes(args: { minutes: number; pantry: string[]; 
       eatMinutes: args.profile.eat_minutes,
       count: args.count ?? 3,
       request: args.request,
-      profile: { diets: args.profile.diets, avoid: args.profile.avoid, cuisines: args.profile.cuisines, kitchen: args.profile.kitchen, skill: args.profile.skill, notes: args.profile.notes },
+      profile: { living: args.profile.living, style: args.profile.style, diets: args.profile.diets, avoid: args.profile.avoid, cuisines: args.profile.cuisines, kitchen: args.profile.kitchen, skill: args.profile.skill, notes: args.profile.notes },
     }),
   });
   const data = (await res.json().catch(() => ({}))) as { recipes?: Omit<RecipeDraft, "source" | "source_url" | "image">[]; error?: string };

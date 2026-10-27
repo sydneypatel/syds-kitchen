@@ -33,7 +33,8 @@ export function supabaseBackend(sb: SupabaseClient, userId: string, email: strin
         sb.from("shopping_items").select("*").order("created_at", { ascending: true }),
         sb.from("plan_entries").select("*").order("created_at", { ascending: true }),
       ]);
-      let p = check(profile) as Profile | null;
+      const stored = check(profile) as Partial<Profile> | null;
+      let p: Profile | null = stored ? { ...DEFAULT_PROFILE, ...stored, living: stored.living ?? [], style: stored.style ?? [] } as Profile : null;
       if (!p) {
         // First sign-in: create the profile. ignoreDuplicates makes this safe if two loads race
         // (or a profile already exists), then re-read so we always use the stored row.
@@ -71,7 +72,10 @@ const KEY = "my-kitchen:data:v1";
 function read(): Data {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return JSON.parse(raw) as Data;
+    if (raw) {
+      const d = JSON.parse(raw) as Data;
+      return { ...d, profile: { ...DEFAULT_PROFILE, ...d.profile } };
+    }
   } catch {
     /* ignore */
   }

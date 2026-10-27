@@ -11,7 +11,7 @@ type SuggestBody = {
   eatMinutes?: number;
   count?: number;
   request?: string;
-  profile?: { diets?: string[]; avoid?: string[]; cuisines?: string[]; kitchen?: string[]; skill?: string[]; notes?: string };
+  profile?: { living?: string[]; style?: string[]; diets?: string[]; avoid?: string[]; cuisines?: string[]; kitchen?: string[]; skill?: string[]; notes?: string };
 };
 
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -90,11 +90,13 @@ export async function handleSuggest(request: Request, env: Env, opts: { skipAuth
     body.staples?.length ? `Spices, sauces and oils on hand (use these for flavor; avoid calling for seasonings not on this list unless essential): ${body.staples.slice(0, 80).join(", ")}.` : "",
     body.useSoon?.length ? `Perishables by urgency (use the first ones first; build at least one idea around the most urgent): ${body.useSoon.join(", ")}.` : "",
     "Favor using up fresh produce, dairy, meat and fish before shelf-stable items like grains, cans and pasta.",
+    p.living?.length ? `Living situation: ${p.living.join(", ")}. Size portions and leftovers to fit; with a shared fridge, favor compact prep that stores well.` : "",
+    p.style?.length ? `Cooking style: ${p.style.join(", ")}. Match it: batch/meal-prep or leftovers → more servings that keep 3-4 days and reheat well; fresh every meal → 1-2 servings; quick meals → minimal steps.` : "",
     `Diet: ${list(p.diets)}. Avoid: ${list(p.avoid)}. Favorite cuisines: ${list(p.cuisines)}. Kitchen: ${list(p.kitchen)}. Skill: ${list(p.skill)}.`,
     p.notes ? `Other notes: ${p.notes}` : "",
     body.request ? `Specific request: ${body.request}` : "",
     "Lean on what's on hand; keep extra ingredients to a few cheap, common items. Assume salt, pepper, oil and water are available.",
-    "Prefer recipes that keep well as leftovers or meal prep when it fits. Make each suggestion distinct. Steps should be concise (3-7 steps).",
+    "Unless their cooking style says otherwise, prefer recipes that keep well as leftovers or meal prep. Make each suggestion distinct. Steps should be concise (3-7 steps).",
   ]
     .filter(Boolean)
     .join("\n");

@@ -12,6 +12,8 @@ create table if not exists public.profiles (
   kitchen text[] not null default '{}',
   inspiration text[] not null default '{}',
   skill text[] not null default '{}',
+  living text[] not null default '{}',
+  style text[] not null default '{}',
   notes text not null default '',
   eat_minutes int not null default 15,
   store text not null default ''
@@ -65,6 +67,10 @@ create table if not exists public.plan_entries (
   servings int not null default 1,
   created_at timestamptz not null default now()
 );
+
+-- Added later; safe to run on an existing database.
+alter table public.profiles add column if not exists living text[] not null default '{}';
+alter table public.profiles add column if not exists style text[] not null default '{}';
 
 alter table public.profiles enable row level security;
 alter table public.recipes enable row level security;
