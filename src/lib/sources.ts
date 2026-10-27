@@ -99,3 +99,34 @@ export async function suggestRecipes(args: { minutes: number; pantry: string[]; 
     source_url: null,
   }));
 }
+
+/* ---------------- Import from link or text (via /api/import) ---------------- */
+
+export type ImportedRecipe = {
+  title: string;
+  description: string;
+  image: string | null;
+  prep: number | null;
+  cook: number | null;
+  clean: number | null;
+  servings: number | null;
+  ingredients: string[];
+  steps: string[];
+  tags: string[];
+  source_url: string | null;
+  via: "page-data" | "claude";
+};
+
+export async function importRecipe(input: string): Promise<ImportedRecipe> {
+  const trimmed = input.trim();
+  const isUrl = /^https?:\/\/\S+$/i.test(trimmed);
+  const session = supabase ? (await supabase.auth.getSession()).data.session : null;
+  const res = await fetch("/api/import", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+    body: JSON.stringify(isUrl ? { url: trimmed } : { text: trimmed }),
+  });
+  const data = (await res.json().catch(() => ({}))) as { recipe?: ImportedRecipe; error?: string };
+  if (!res.ok || !data.recipe) throw new Error(data.error || "Couldn't import that. Try pasting the recipe text.");
+  return data.recipe;
+}

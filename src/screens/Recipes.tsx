@@ -29,7 +29,7 @@ export function Recipes() {
   return <main>
     <Header title="Recipes" right={<a href="#/new" aria-label="New recipe" className="icon-btn lg:hidden"><Icon name="plus" /></a>} />
     <Page>
-      <Title title="Cook with what you have" copy="Each recipe shows what’s ready and what you’ll still need." right={<div className="flex gap-2"><a href="#/browse" className="btn btn-secondary"><Icon name="globe" size={16} /> Browse TheMealDB</a><a href="#/new" className="btn btn-primary max-lg:hidden"><Icon name="plus" size={16} /> New recipe</a></div>} />
+      <Title title="Cook with what you have" copy="Each recipe shows what’s ready and what you’ll still need." right={<div className="flex gap-2"><a href="#/browse" className="btn btn-secondary"><Icon name="globe" size={16} /> Browse TheMealDB</a><a href="#/new" className="btn btn-primary"><Icon name="plus" size={16} /> Add or paste a recipe</a></div>} />
       <div className="mt-5 flex items-center gap-2 rounded-2xl border border-line bg-white px-3.5 lg:max-w-md"><Icon name="search" size={17} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search recipes or ingredients" className="w-full bg-transparent py-3 text-sm outline-none" /></div>
       <div className="no-scrollbar -mx-5 mt-4 flex gap-2 overflow-x-auto px-5 lg:mx-0 lg:flex-wrap lg:px-0">{FILTERS.map((x) => <button key={x} onClick={() => setFilter(x)} className={`chip ${filter === x ? "chip-active" : ""}`}>{x}</button>)}</div>
       {shown.length ? <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{shown.map((r) => <RecipeCard key={r.id} recipe={r} />)}</div>
