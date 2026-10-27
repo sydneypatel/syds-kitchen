@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PlanPicker } from "../components/PlanPicker";
-import { Button, Empty, Header, Icon, RecipeImage, Sheet, SourceBadge, toast } from "../components/ui";
+import { Button, Empty, Header, Icon, PhotoButton, RecipeImage, Sheet, SourceBadge, toast } from "../components/ui";
+import { uploadRecipePhoto } from "../lib/photos";
 import { inPantry, missingFor, sameFood } from "../lib/food";
 import { back, getDraft, navigate } from "../lib/router";
 import { useStore } from "../lib/store";
@@ -29,14 +30,22 @@ export function RecipeView({ id, draftId }: { id?: string; draftId?: string }) {
     toast(n ? `Added ${n} item${n === 1 ? "" : "s"} to your shopping list` : "Already on your shopping list");
   };
 
+  const favButton = saved && <button aria-label="Favorite" onClick={() => store.updateRecipe(saved.id, { favorite: !saved.favorite })} className={`grid size-10 place-items-center rounded-full ${saved.favorite ? "bg-coral text-white" : "bg-white"}`}><Icon name="heart" /></button>;
+  const addPhoto = async (file: File) => {
+    if (!saved) return;
+    const url = await uploadRecipePhoto(saved.id, file);
+    store.updateRecipe(saved.id, { image: url });
+    toast("Photo added");
+  };
+
   return <main className="pb-8">
-    <div className="lg:hidden"><div className="relative h-72"><RecipeImage src={recipe.image} title={recipe.title} className="h-72" /><div className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent" />
+    {recipe.image ? <div className="lg:hidden"><div className="relative h-72"><RecipeImage src={recipe.image} title={recipe.title} className="h-72" /><div className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent" />
       <button aria-label="Go back" onClick={() => back("/recipes")} className="absolute left-4 top-5 grid size-10 place-items-center rounded-full bg-white/90"><Icon name="back" /></button>
       {saved && <button aria-label="Favorite" onClick={() => store.updateRecipe(saved.id, { favorite: !saved.favorite })} className={`absolute right-4 top-5 grid size-10 place-items-center rounded-full ${saved.favorite ? "bg-coral text-white" : "bg-white/90"}`}><Icon name="heart" /></button>}
-    </div></div>
-    <div className="hidden lg:block"><Header title={recipe.title} back="/recipes" right={saved && <button aria-label="Favorite" onClick={() => store.updateRecipe(saved.id, { favorite: !saved.favorite })} className={`grid size-10 place-items-center rounded-full ${saved.favorite ? "bg-coral text-white" : "bg-white"}`}><Icon name="heart" /></button>} /></div>
+    </div></div> : <div className="lg:hidden"><Header title="" back="/recipes" right={favButton} /></div>}
+    <div className="hidden lg:block"><Header title={recipe.title} back="/recipes" right={favButton} /></div>
 
-    <div className="relative -mt-7 rounded-t-[2rem] bg-cream px-5 pt-7 lg:mx-auto lg:mt-0 lg:max-w-6xl lg:px-10 lg:pt-10">
+    <div className={`relative bg-cream px-5 pt-7 ${recipe.image ? "-mt-7 rounded-t-[2rem]" : ""} lg:mx-auto lg:mt-0 lg:max-w-6xl lg:rounded-none lg:px-10 lg:pt-10`}>
       <div className="lg:grid lg:grid-cols-[1fr_380px] lg:gap-10">
         <div>
           <div className="flex items-center gap-2"><SourceBadge source={recipe.source} /><span className="eyebrow">{missing.length ? `Missing ${missing.length}` : "Fits your kitchen"}</span></div>
@@ -48,12 +57,15 @@ export function RecipeView({ id, draftId }: { id?: string; draftId?: string }) {
             {saved ? <>
               <Button onClick={() => setPlanOpen(true)}><Icon name="calendar" size={16} /> Add to plan</Button>
               <Button variant="secondary" onClick={() => setCookedOpen(true)}><Icon name="pot" size={16} /> I made this</Button>
+              {!saved.image && <PhotoButton onUpload={addPhoto} className="lg:hidden" />}
               <Button variant="secondary" onClick={() => navigate(`/recipe/${saved.id}/edit`)}><Icon name="edit" size={16} /> Edit</Button>
               <Button variant="ghost" onClick={() => setConfirmDelete(true)} className="!text-muted"><Icon name="trash" size={16} /> Delete</Button>
             </> : <Button variant="coral" onClick={saveDraft}><Icon name="heart" size={16} /> Save to my recipes</Button>}
           </div>
         </div>
-        <div className="hidden lg:block"><RecipeImage src={recipe.image} title={recipe.title} className="h-full max-h-80 rounded-3xl" /></div>
+        <div className="hidden lg:block">{recipe.image
+          ? <RecipeImage src={recipe.image} title={recipe.title} className="h-full max-h-80 rounded-3xl" />
+          : saved && <div className="grid h-full min-h-56 place-items-center rounded-3xl border-2 border-dashed border-line p-6 text-center"><div><span className="flex justify-center text-muted"><Icon name="camera" size={28} /></span><p className="mt-2 text-sm text-muted">No photo yet. Add one after you make it.</p><PhotoButton onUpload={addPhoto} className="mt-4" /></div></div>}</div>
       </div>
 
       <div className="lg:grid lg:grid-cols-[380px_1fr] lg:gap-10">
@@ -68,7 +80,7 @@ export function RecipeView({ id, draftId }: { id?: string; draftId?: string }) {
 
     {saved && <>
       <PlanPicker open={planOpen} onClose={() => setPlanOpen(false)} recipeId={saved.id} title={saved.title} />
-      <CookedSheet open={cookedOpen} onClose={() => setCookedOpen(false)} recipe={saved} />
+      <CookedSheet open={cookedOpen} onClose={() => setCookedOpen(false)} recipe={saved} onPhoto={addPhoto} />
       <Sheet open={confirmDelete} onClose={() => setConfirmDelete(false)} title="Delete this recipe?" subtitle="It will also be removed from your plan.">
         <div className="mt-6 flex gap-2"><Button variant="secondary" onClick={() => setConfirmDelete(false)} className="flex-1 justify-center">Cancel</Button><Button variant="coral" onClick={() => { store.removeRecipe(saved.id); navigate("/recipes"); }} className="flex-1 justify-center">Delete</Button></div>
       </Sheet>
@@ -77,13 +89,19 @@ export function RecipeView({ id, draftId }: { id?: string; draftId?: string }) {
 }
 
 /** After cooking, tick off what got used up so the pantry stays honest. */
-function CookedSheet({ open, onClose, recipe }: { open: boolean; onClose: () => void; recipe: Recipe }) {
+function CookedSheet({ open, onClose, recipe, onPhoto }: { open: boolean; onClose: () => void; recipe: Recipe; onPhoto: (file: File) => Promise<void> }) {
   const { pantry_items, removePantry } = useStore();
   const used = pantry_items.filter((p) => recipe.ingredients.some((i) => sameFood(i.name, p.name)));
   const [picked, setPicked] = useState<string[]>([]);
-  return <Sheet open={open} onClose={onClose} title="Nice work!" subtitle="Anything you used up? We'll take it out of your kitchen.">
-    {used.length ? <div className="mt-5 overflow-hidden rounded-2xl bg-white">{used.map((p, i) => { const on = picked.includes(p.id); return <button key={p.id} onClick={() => setPicked(on ? picked.filter((x) => x !== p.id) : [...picked, p.id])} className={`flex w-full items-center gap-3 p-4 text-left ${i ? "border-t border-line" : ""}`}><span className={`grid size-6 place-items-center rounded-full border ${on ? "border-coral bg-coral text-white" : "border-line"}`}>{on && <Icon name="check" size={14} />}</span><span className="text-sm font-semibold">{p.name}</span></button>; })}</div>
-      : <p className="mt-5 text-sm text-muted">None of this recipe's ingredients are in your kitchen list.</p>}
+  return <Sheet open={open} onClose={onClose} title="Nice work!" subtitle="Snap a photo, and tick off anything you used up.">
+    <div className="mt-5 flex items-center gap-4 rounded-2xl bg-white p-3">
+      {recipe.image ? <img src={recipe.image} alt="" className="size-16 shrink-0 rounded-xl object-cover" /> : <span className="grid size-16 shrink-0 place-items-center rounded-xl bg-sage text-forest"><Icon name="camera" size={22} /></span>}
+      <div className="min-w-0 flex-1"><div className="text-sm font-bold">{recipe.image ? "Photo saved" : "How did it turn out?"}</div><div className="text-xs text-muted">{recipe.image ? "Swap in your own if you like." : "Add a photo so this recipe has one."}</div></div>
+      <PhotoButton onUpload={onPhoto} label={recipe.image ? "Replace" : "Add photo"} variant={recipe.image ? "secondary" : "coral"} className="!min-h-10 shrink-0 !px-3.5 !py-2" />
+    </div>
+    <div className="mt-5 label">Used up</div>
+    {used.length ? <div className="mt-3 overflow-hidden rounded-2xl bg-white">{used.map((p, i) => { const on = picked.includes(p.id); return <button key={p.id} onClick={() => setPicked(on ? picked.filter((x) => x !== p.id) : [...picked, p.id])} className={`flex w-full items-center gap-3 p-4 text-left ${i ? "border-t border-line" : ""}`}><span className={`grid size-6 place-items-center rounded-full border ${on ? "border-coral bg-coral text-white" : "border-line"}`}>{on && <Icon name="check" size={14} />}</span><span className="text-sm font-semibold">{p.name}</span></button>; })}</div>
+      : <p className="mt-3 text-sm text-muted">None of this recipe's ingredients are in your kitchen list.</p>}
     <Button onClick={() => { removePantry(picked); if (picked.length) toast(`Removed ${picked.length} from your kitchen`); setPicked([]); onClose(); }} className="mt-6 w-full justify-center">{picked.length ? `Remove ${picked.length} used up` : "Done"}</Button>
   </Sheet>;
 }

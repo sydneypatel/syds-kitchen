@@ -27,6 +27,7 @@ export function Icon({ name, size = 20 }: { name: string; size?: number }) {
     refresh: <><path d="M20 11a8 8 0 1 0-2.3 5.7" /><path d="M20 4v7h-7" /></>,
     pot: <><path d="M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4Z" /><path d="M2 10h20M9 6c0-1 1-2 1-3M14 6c0-1 1-2 1-3" /></>,
     snow: <path d="M12 2v20M4.5 6.5l15 11M19.5 6.5l-15 11" />,
+    camera: <><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" /><circle cx="12" cy="13.5" r="3.5" /></>,
     jar: <><path d="M8 3h8v3H8z" /><path d="M7 6h10a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" /><path d="M5 12h14" /></>,
   };
   return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
@@ -87,14 +88,16 @@ export function Sheet({ open, onClose, title, subtitle, children, wide = false }
   </div>;
 }
 
+/**
+ * A recipe's photo. Recipes without one show nothing (no fake image), except small
+ * thumbnails (size-/w- classes, e.g. in the planner), which get a tiny icon tile.
+ */
 export function RecipeImage({ src, title, className = "" }: { src: string | null; title: string; className?: string }) {
   const [failed, setFailed] = useState(false);
-  const width = /(^|\s)(size-|w-)/.test(className) ? "" : "w-full";
-  if (src && !failed) return <img src={src} alt={title} loading="lazy" onError={() => setFailed(true)} className={`${width} object-cover ${className}`} />;
-  // Placeholder for recipes without a photo — tinted by title so cards don't all look the same.
-  const tints = ["bg-sage text-forest", "bg-sand text-coral", "bg-mint text-forest", "bg-[#f6dcd3] text-coral"];
-  const tint = tints[[...title].reduce((a, c) => a + c.charCodeAt(0), 0) % tints.length];
-  return <div className={`grid ${width} place-items-center ${tint} ${className}`}><div className="flex flex-col items-center gap-2 opacity-80"><Icon name="pot" size={title ? 34 : 20} />{title && <span className="max-w-[80%] text-center font-display text-lg leading-tight">{title}</span>}</div></div>;
+  const thumb = /(^|\s)(size-|w-)/.test(className);
+  if (src && !failed) return <img src={src} alt={title} loading="lazy" onError={() => setFailed(true)} className={`${thumb ? "" : "w-full"} object-cover ${className}`} />;
+  if (!thumb) return null;
+  return <div className={`grid place-items-center bg-sage text-forest/70 ${className}`}><Icon name="pot" size={20} /></div>;
 }
 
 export function Empty({ title, copy, action }: { title: string; copy: string; action?: ReactNode }) {
@@ -127,4 +130,25 @@ export function Toaster() {
   }, []);
   if (!msg) return null;
   return <div role="status" className="fixed inset-x-0 bottom-24 z-[60] flex justify-center px-5 lg:bottom-8"><div className="rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white shadow-2xl">{msg}</div></div>;
+}
+
+/** "Add photo" button: opens the camera or photo library, uploads, and hands back the URL. */
+export function PhotoButton({ onUpload, label = "Add photo", className = "", variant = "secondary" }: { onUpload: (file: File) => Promise<void>; label?: string; className?: string; variant?: "primary" | "secondary" | "ghost" | "coral" }) {
+  const [busy, setBusy] = useState(false);
+  return <label className={`btn btn-${variant} cursor-pointer ${busy ? "pointer-events-none opacity-60" : ""} ${className}`}>
+    <Icon name="camera" size={16} /> {busy ? "Uploading…" : label}
+    <input type="file" accept="image/*" className="sr-only" disabled={busy} onChange={async (e) => {
+      const file = e.target.files?.[0];
+      e.target.value = "";
+      if (!file) return;
+      setBusy(true);
+      try {
+        await onUpload(file);
+      } catch (err) {
+        toast((err as Error).message || "Upload failed. Try again.");
+      } finally {
+        setBusy(false);
+      }
+    }} />
+  </label>;
 }

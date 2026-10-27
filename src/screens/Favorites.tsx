@@ -10,9 +10,9 @@ function FavoriteCard({ recipe }: { recipe: Recipe }) {
   const [note, setNote] = useState(recipe.notes);
   const dirty = note !== recipe.notes;
   return <article className="card">
-    <a href={`#/recipe/${recipe.id}`} className="relative block"><RecipeImage src={recipe.image} title={recipe.title} className="h-36" /><span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-3 py-1 text-xs font-bold">{totalMinutes(recipe, profile.eat_minutes)} min</span></a>
+    {recipe.image && <a href={`#/recipe/${recipe.id}`} className="relative block"><RecipeImage src={recipe.image} title={recipe.title} className="h-36" /><span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-3 py-1 text-xs font-bold">{totalMinutes(recipe, profile.eat_minutes)} min</span></a>}
     <div className="p-4">
-      <h3 className="font-display text-xl leading-tight">{recipe.title}</h3>
+      <div className="flex items-start justify-between gap-3"><a href={`#/recipe/${recipe.id}`} className="font-display text-xl leading-tight">{recipe.title}</a>{!recipe.image && <span className="shrink-0 rounded-full bg-sand px-3 py-1 text-xs font-bold">{totalMinutes(recipe, profile.eat_minutes)} min</span>}</div>
       <div className="mt-4 flex items-center gap-3"><span className="text-xs font-bold text-muted">Your rating</span><input aria-label={`Rating for ${recipe.title}`} type="range" min="1" max="10" value={rating} onChange={(e) => setRating(Number(e.target.value))} onPointerUp={() => updateRecipe(recipe.id, { rating })} onKeyUp={() => updateRecipe(recipe.id, { rating })} className="rating-range" /><span className="grid size-8 place-items-center rounded-full bg-sand text-xs font-bold">{rating}</span></div>
       <textarea aria-label={`Notes for ${recipe.title}`} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Add a note for next time..." className="note-field mt-4" />
       <button disabled={!dirty} onClick={() => { updateRecipe(recipe.id, { notes: note }); toast("Note saved"); }} className="mt-3 text-xs font-bold text-coral disabled:text-muted">{dirty ? "Save note" : recipe.notes ? "Saved" : "Save note"}</button>

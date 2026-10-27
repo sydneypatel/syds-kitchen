@@ -100,3 +100,17 @@ create policy "own plan" on public.plan_entries for all using (user_id = auth.ui
 grant usage on schema public to authenticated;
 grant select, insert, update, delete on public.profiles, public.recipes, public.pantry_items, public.shopping_items, public.plan_entries to authenticated;
 revoke all on public.profiles, public.recipes, public.pantry_items, public.shopping_items, public.plan_entries from anon;
+
+-- Recipe photos (Supabase Storage). Photos are public links so they load fast in the app;
+-- only signed-in users can upload, and only into their own folder. Safe to re-run.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('recipe-photos', 'recipe-photos', true, 5242880, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do nothing;
+
+drop policy if exists "recipe photos: upload own" on storage.objects;
+create policy "recipe photos: upload own" on storage.objects for insert to authenticated
+  with check (bucket_id = 'recipe-photos' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "recipe photos: delete own" on storage.objects;
+create policy "recipe photos: delete own" on storage.objects for delete to authenticated
+  using (bucket_id = 'recipe-photos' and (storage.foldername(name))[1] = auth.uid()::text);
