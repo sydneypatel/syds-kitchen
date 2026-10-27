@@ -45,9 +45,9 @@ function EditItemSheet({ item, onClose }: { item: PantryItem | null; onClose: ()
         <div className="mt-1.5 flex gap-2"><input type="date" aria-label="Use-by date" className={input} value={date} onChange={(e) => setDate(e.target.value)} />{date && <button type="button" onClick={() => setDate("")} className="shrink-0 px-2 text-sm font-bold text-muted hover:text-coral">Clear</button>}</div>
       </div>
       <div><span className="label">Stored in</span>
-        <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-4">{STORAGES.map((s) => <button type="button" key={s} onClick={() => setWhere(s)} aria-pressed={where === s} className={`rounded-xl border px-2 py-2.5 text-sm font-bold ${where === s ? "border-forest bg-forest text-white" : "border-line bg-white text-ink hover:border-forest"}`}>{s === "Spices" ? "Spices" : STORAGE_LABEL[s]}</button>)}</div>
+        <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-4">{STORAGES.map((s) => <button type="button" key={s} onClick={() => setWhere(s)} aria-pressed={where === s} className={`flex items-center justify-center gap-1.5 rounded-xl border-2 px-2 py-2.5 text-sm font-bold ${where === s ? "border-coral bg-[#fff2ec] text-[#a53f28]" : "border-line bg-white text-ink hover:border-coral/50"}`}>{where === s && <Icon name="check" size={14} />}{s === "Spices" ? "Spices" : STORAGE_LABEL[s]}</button>)}</div>
       </div>
-      <div className="flex gap-2 pt-2"><Button variant="secondary" onClick={onClose} className="flex-1">Cancel</Button><Button type="submit" disabled={!name.trim()} className="flex-1">Save</Button></div>
+      <div className="!mt-6 flex gap-3 border-t border-line pt-5"><Button variant="secondary" onClick={onClose} className="flex-1 justify-center">Cancel</Button><Button type="submit" disabled={!name.trim()} className="flex-1 justify-center"><Icon name="check" size={16} /> Save</Button></div>
       <button type="button" onClick={remove} className="mx-auto flex items-center gap-1.5 pt-1 text-sm font-bold text-coral"><Icon name="close" size={15} /> Delete ingredient</button>
     </form>
   </Sheet>;

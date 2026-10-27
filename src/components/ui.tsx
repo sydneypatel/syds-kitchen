@@ -37,16 +37,16 @@ export function Button({ children, onClick, variant = "primary", disabled = fals
   return <button type={type} disabled={disabled} onClick={onClick} className={`btn btn-${variant} ${className}`}>{children}</button>;
 }
 
-export function Logo({ light = false }: { light?: boolean }) {
-  return <div className={`flex items-center gap-2 font-bold tracking-[-0.04em] ${light ? "text-white" : "text-ink"}`}><span className="grid size-8 place-items-center rounded-full bg-coral text-white"><Icon name="ingredients" size={17} /></span>My Kitchen</div>;
+export function Logo({ light = false, iconOnly = false }: { light?: boolean; iconOnly?: boolean }) {
+  return <div className={`flex items-center gap-2 font-bold tracking-[-0.04em] ${light ? "text-white" : "text-ink"}`} aria-label={iconOnly ? "My Kitchen" : undefined}><span className="grid size-8 place-items-center rounded-full bg-coral text-white"><Icon name="ingredients" size={17} /></span>{!iconOnly && "My Kitchen"}</div>;
 }
 
 /** Top bar. On phones it shows the logo or a back button; on laptops the sidebar has the logo. */
 export function Header({ title = "", back, right }: { title?: string; back?: string | boolean; right?: ReactNode }) {
   const onBack = () => (typeof back === "string" ? goBack(back) : goBack());
   return <header className={`sticky top-0 z-20 flex h-16 items-center justify-between border-b border-line bg-cream/92 px-5 backdrop-blur-xl lg:px-10 ${back ? "" : "lg:hidden"}`}>
-    {back ? <button aria-label="Go back" onClick={onBack} className="icon-btn"><Icon name="back" /></button> : <span className="lg:invisible"><Logo /></span>}
-    <div className={`${back ? "absolute left-1/2 -translate-x-1/2" : ""} text-sm font-bold`}>{title}</div>
+    {back ? <button aria-label="Go back" onClick={onBack} className="icon-btn"><Icon name="back" /></button> : <a href="#/" className="lg:invisible"><Logo iconOnly /></a>}
+    <div className="absolute left-1/2 -translate-x-1/2 text-sm font-bold">{title}</div>
     <div className="flex min-w-9 items-center justify-end gap-1">{right}</div>
   </header>;
 }
