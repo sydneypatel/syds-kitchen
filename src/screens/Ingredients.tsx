@@ -4,7 +4,6 @@ import { daysUntil, estimateExpiry, parseQuantity, sameFood } from "../lib/food"
 import { useStore } from "../lib/store";
 import { MAIN_STORAGES, STORAGES, STORAGE_LABEL, type PantryItem, type Storage } from "../lib/types";
 
-const STORAGE_ICON: Record<Storage, string> = { Fridge: "ingredients", Freezer: "snow", Pantry: "recipes", Spices: "jar" };
 
 /** One-tap adds for the flavor shelf. Only ones you don't already have are shown. */
 const COMMON_FLAVORS = ["Salt", "Black pepper", "Olive oil", "Garlic powder", "Onion powder", "Cumin", "Paprika", "Chili flakes", "Turmeric", "Garam masala", "Oregano", "Cinnamon", "Soy sauce", "Sriracha", "Rice vinegar", "Sesame oil", "Honey", "Dijon mustard", "Hot sauce", "Chili crisp"];
@@ -100,7 +99,6 @@ export function Ingredients() {
         : <div className="mt-6 grid gap-5 lg:grid-cols-3">{groups.map(({ s, items }) => <section key={s}>
           <div className="mb-2 flex items-center justify-between px-1"><h2 className="font-display text-xl">{STORAGE_LABEL[s]}</h2><span className="text-[.65rem] font-bold uppercase tracking-widest text-muted">{items.length} {items.length === 1 ? "item" : "items"}</span></div>
           <div className="card">{items.length ? items.map((item, i) => <div key={item.id} className={`flex items-center gap-2.5 px-3.5 py-3 sm:gap-3 sm:px-4 sm:py-3.5 ${i ? "border-t border-line" : ""}`}>
-            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-sage text-forest max-sm:hidden"><Icon name={STORAGE_ICON[s]} size={17} /></span>
             <QtyInput key={item.qty ?? ""} item={item} />
             <span className="min-w-0 flex-1 truncate font-semibold">{item.name}</span>
             <ExpiryChip item={item} />
