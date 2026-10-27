@@ -35,6 +35,7 @@ export type PantryItem = {
   id: string;
   name: string;
   storage: Storage;
+  qty: string | null; // free text: "6", "1 lb", "half a bag"
   expires_on: string | null; // yyyy-mm-dd
   created_at: string;
 };

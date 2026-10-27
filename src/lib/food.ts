@@ -159,5 +159,29 @@ export function perishablesForClaude(items: PantryItem[], withinDays = 10): stri
     .map((p) => ({ p, d: daysUntil(p.expires_on) }))
     .filter((x): x is { p: PantryItem; d: number } => x.d !== null && x.d <= withinDays)
     .sort((a, b) => a.d - b.d)
-    .map(({ p, d }) => `${p.name} (${d < 0 ? "past its date, check it" : d === 0 ? "use today" : `${d} day${d === 1 ? "" : "s"} left`})`);
+    .map(({ p, d }) => `${withQty(p)}: ${d < 0 ? "past its date, check it" : d === 0 ? "use today" : `${d} day${d === 1 ? "" : "s"} left`}`);
+}
+
+/* ---------------- Quantities ("6 eggs", "1 lb chicken meatballs", "eggs x12") ---------------- */
+
+const UNITS = "cups?|tbsps?|tablespoons?|tsps?|teaspoons?|g|grams?|kg|ml|l|liters?|oz|ounces?|lbs?|pounds?|cloves?|cans?|pinch(?:es)?|bunch(?:es)?|slices?|pieces?|handfuls?|packs?|packages?|blocks?|dozen|bags?|boxes?|bottles?|jars?|heads?|containers?|cartons?|pints?|quarts?|gallons?|sticks?|loaf|loaves|fillets?|stalks?|sprigs?|tubs?";
+export const LEADING_QTY = new RegExp(`^((?:[\\d½¼¾⅓⅔/.\\-–]+\\s*)+(?:(?:${UNITS})\\b)?\\.?)\\s+(.+)$`, "i");
+const WORD_QTY = new RegExp(`^(an?|half an?|half)\\s+(${UNITS})\\b\\s*(?:of\\s+)?(.+)$`, "i");
+const TRAILING_QTY = /^(.+?)\s*(?:[x×]\s*(\d+(?:\.\d+)?)|\(\s*([^)]+)\s*\)|[-–:]\s*(\d[\w\s./]*))$/i;
+
+/** Splits "6 eggs" → { name: "eggs", qty: "6" }. No amount → qty null. */
+export function parseQuantity(input: string): { name: string; qty: string | null } {
+  const s = input.trim().replace(/\s+/g, " ");
+  let m = s.match(LEADING_QTY);
+  if (m) return { name: m[2].trim(), qty: m[1].trim() };
+  m = s.match(WORD_QTY);
+  if (m) return { name: m[3].trim(), qty: `${/^half/i.test(m[1]) ? "½" : "1"} ${m[2]}` };
+  m = s.match(TRAILING_QTY);
+  if (m) return { name: m[1].trim(), qty: (m[2] ?? m[3] ?? m[4]).trim() };
+  return { name: s, qty: null };
+}
+
+/** "Eggs (6)" for Claude; just the name when there's no amount. */
+export function withQty(p: Pick<PantryItem, "name" | "qty">) {
+  return p.qty ? `${p.name} (${p.qty})` : p.name;
 }

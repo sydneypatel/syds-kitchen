@@ -45,6 +45,7 @@ create table if not exists public.pantry_items (
   user_id uuid not null references auth.users on delete cascade default auth.uid(),
   name text not null,
   storage text not null default 'Fridge',
+  qty text,
   expires_on date,
   created_at timestamptz not null default now()
 );
@@ -71,6 +72,7 @@ create table if not exists public.plan_entries (
 -- Added later; safe to run on an existing database.
 alter table public.profiles add column if not exists living text[] not null default '{}';
 alter table public.profiles add column if not exists style text[] not null default '{}';
+alter table public.pantry_items add column if not exists qty text;
 
 alter table public.profiles enable row level security;
 alter table public.recipes enable row level security;

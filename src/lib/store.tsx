@@ -7,7 +7,7 @@ type Store = Data & {
   error: string | null;
   clearError(): void;
   saveProfile(patch: Partial<Profile>): void;
-  addPantry(name: string, storage?: Storage, expires_on?: string | null): void;
+  addPantry(name: string, storage?: Storage, expires_on?: string | null, qty?: string | null): void;
   updatePantry(id: string, patch: Partial<PantryItem>): void;
   removePantry(ids: string[]): void;
   saveRecipe(draft: RecipeDraft, id?: string): Recipe;
@@ -55,12 +55,18 @@ export function StoreProvider({ initial, backend, children }: { initial: Data; b
         set((d) => ({ ...d, profile }));
         persist(backend.saveProfile(profile));
       },
-      addPantry(name, storage, expires_on) {
+      addPantry(name, storage, expires_on, qty = null) {
         const clean = titleCase(name);
-        if (!clean || ref.current.pantry_items.some((p) => p.name.toLowerCase() === clean.toLowerCase())) return;
+        if (!clean) return;
+        const existing = ref.current.pantry_items.find((p) => p.name.toLowerCase() === clean.toLowerCase());
+        if (existing) {
+          // Already have it: adding again with an amount just updates the amount.
+          if (qty) api.updatePantry(existing.id, { qty });
+          return;
+        }
         const where = storage ?? guessStorage(clean);
         // No date given: fill in a typical use-by estimate (editable on the Ingredients page).
-        const row: PantryItem = { id: uid(), name: clean, storage: where, expires_on: expires_on === undefined ? estimateExpiry(clean, where) : expires_on, created_at: now() };
+        const row: PantryItem = { id: uid(), name: clean, storage: where, qty, expires_on: expires_on === undefined ? estimateExpiry(clean, where) : expires_on, created_at: now() };
         set((d) => ({ ...d, pantry_items: [...d.pantry_items, row] }));
         persist(backend.insert("pantry_items", row));
       },

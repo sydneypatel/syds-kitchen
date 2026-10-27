@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { TimingCard } from "../components/RecipeCard";
 import { Button, Empty, Header, Icon, Page, Title } from "../components/ui";
-import { daysUntil, missingFor, perishablesForClaude, sameFood, totalMinutes } from "../lib/food";
+import { daysUntil, missingFor, perishablesForClaude, sameFood, totalMinutes, withQty } from "../lib/food";
 import { putDraft } from "../lib/router";
 import { suggestRecipes } from "../lib/sources";
 import { useStore } from "../lib/store";
@@ -29,7 +29,7 @@ export function MealOptions({ minutes }: { minutes: number }) {
     setError(null);
     try {
       const useSoon = perishablesForClaude(pantry_items);
-      const drafts = await suggestRecipes({ minutes, pantry: pantry_items.filter((p) => p.storage !== "Spices").map((p) => p.name), staples: pantry_items.filter((p) => p.storage === "Spices").map((p) => p.name), useSoon, profile, request: ask.trim() || undefined });
+      const drafts = await suggestRecipes({ minutes, pantry: pantry_items.filter((p) => p.storage !== "Spices").map(withQty), staples: pantry_items.filter((p) => p.storage === "Spices").map((p) => p.name), useSoon, profile, request: ask.trim() || undefined });
       const next = [...drafts.map((draft) => ({ draftId: putDraft(draft), draft })), ...ideas];
       ideaCache.set(minutes, next);
       setIdeas(next);

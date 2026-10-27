@@ -4,8 +4,7 @@ import { navigate } from "../lib/router";
 import { importRecipe } from "../lib/sources";
 import { useStore } from "../lib/store";
 import type { Ingredient, RecipeDraft } from "../lib/types";
-
-const QTY = /^((?:[\d½¼¾⅓⅔/.\-–]+\s*)+(?:cups?|tbsps?|tablespoons?|tsps?|teaspoons?|g|grams?|kg|ml|l|oz|ounces?|lbs?|pounds?|cloves?|cans?|pinch(?:es)?|bunch(?:es)?|slices?|pieces?|handfuls?|packs?|blocks?)?\.?)\s+(.+)$/i;
+import { LEADING_QTY as QTY } from "../lib/food";
 
 function parseIngredients(text: string): Ingredient[] {
   return text.split("\n").map((l) => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean).map((line) => {

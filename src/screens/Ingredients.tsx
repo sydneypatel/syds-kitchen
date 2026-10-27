@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, Empty, Header, Icon, Page, Title, toast } from "../components/ui";
-import { daysUntil, estimateExpiry, sameFood } from "../lib/food";
+import { daysUntil, estimateExpiry, parseQuantity, sameFood } from "../lib/food";
 import { useStore } from "../lib/store";
 import { MAIN_STORAGES, STORAGES, STORAGE_LABEL, type PantryItem, type Storage } from "../lib/types";
 
@@ -8,6 +8,17 @@ const STORAGE_ICON: Record<Storage, string> = { Fridge: "ingredients", Freezer: 
 
 /** One-tap adds for the flavor shelf. Only ones you don't already have are shown. */
 const COMMON_FLAVORS = ["Salt", "Black pepper", "Olive oil", "Garlic powder", "Onion powder", "Cumin", "Paprika", "Chili flakes", "Turmeric", "Garam masala", "Oregano", "Cinnamon", "Soy sauce", "Sriracha", "Rice vinegar", "Sesame oil", "Honey", "Dijon mustard", "Hot sauce", "Chili crisp"];
+
+/** Editable amount ("6", "1 lb", "half a bag"). Saves when you leave the box or press Enter. */
+function QtyInput({ item }: { item: PantryItem }) {
+  const { updatePantry } = useStore();
+  const [v, setV] = useState(item.qty ?? "");
+  const save = () => {
+    const next = v.trim() || null;
+    if (next !== (item.qty ?? null)) updatePantry(item.id, { qty: next });
+  };
+  return <input value={v} onChange={(e) => setV(e.target.value)} onBlur={save} onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()} placeholder="Qty" aria-label={`Amount of ${item.name}`} className={`w-16 shrink-0 rounded-lg border px-1 py-1 text-center font-bold ${v.length > 4 ? "text-xs" : "text-sm"} outline-none focus:border-coral ${v ? "border-transparent bg-sand text-ink" : "border-dashed border-line bg-transparent text-muted"}`} />;
+}
 
 function ExpiryChip({ item }: { item: PantryItem }) {
   const { updatePantry } = useStore();
@@ -61,7 +72,10 @@ export function Ingredients() {
 
   const add = () => {
     const names = draft.split(/,|\n/).map((s) => s.trim()).filter(Boolean);
-    names.forEach((n) => addPantry(n, storage === "Auto" ? undefined : storage));
+    names.forEach((n) => {
+      const { name, qty } = parseQuantity(n); // "6 eggs" → Eggs, qty 6
+      addPantry(name, storage === "Auto" ? undefined : storage, undefined, qty);
+    });
     if (names.length > 1) toast(`Added ${names.length} ingredients`);
     setDraft("");
   };
@@ -73,7 +87,7 @@ export function Ingredients() {
     <Page>
       <Title title="What you have" copy="Keep this list current and we’ll show recipes that use it well. Fresh items get an estimated use-by date (tap it to change), so Claude uses what goes off first. Tip: paste a few at once, separated by commas." />
       <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-        <input className="field" placeholder="Add an ingredient (e.g. eggs, spinach, rice)" value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} />
+        <input className="field" placeholder="Add with amounts, e.g. 6 eggs, 2 zucchini, 1 lb chicken meatballs" value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} />
         <div className="flex gap-2">
           <select aria-label="Where it's stored" value={storage} onChange={(e) => setStorage(e.target.value as Storage | "Auto")} className="field !w-auto"><option value="Auto">Auto-sort</option>{STORAGES.map((s) => <option key={s} value={s}>{STORAGE_LABEL[s]}</option>)}</select>
           <Button onClick={add} disabled={!draft.trim()} className="!px-3.5"><Icon name="plus" /><span className="sm:hidden lg:inline">Add</span></Button>
@@ -85,8 +99,9 @@ export function Ingredients() {
       {food.length === 0 ? <div className="mt-6"><Empty title="Your kitchen is empty" copy="Add what's in your fridge, freezer and cupboard. Recipes will show what you have and what you still need." /></div>
         : <div className="mt-6 grid gap-5 lg:grid-cols-3">{groups.map(({ s, items }) => <section key={s}>
           <div className="mb-2 flex items-center justify-between px-1"><h2 className="font-display text-xl">{STORAGE_LABEL[s]}</h2><span className="text-[.65rem] font-bold uppercase tracking-widest text-muted">{items.length} {items.length === 1 ? "item" : "items"}</span></div>
-          <div className="card">{items.length ? items.map((item, i) => <div key={item.id} className={`flex items-center gap-3 px-4 py-3.5 ${i ? "border-t border-line" : ""}`}>
-            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-sage text-forest"><Icon name={STORAGE_ICON[s]} size={17} /></span>
+          <div className="card">{items.length ? items.map((item, i) => <div key={item.id} className={`flex items-center gap-2.5 px-3.5 py-3 sm:gap-3 sm:px-4 sm:py-3.5 ${i ? "border-t border-line" : ""}`}>
+            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-sage text-forest max-sm:hidden"><Icon name={STORAGE_ICON[s]} size={17} /></span>
+            <QtyInput key={item.qty ?? ""} item={item} />
             <span className="min-w-0 flex-1 truncate font-semibold">{item.name}</span>
             <ExpiryChip item={item} />
             <button aria-label={`Remove ${item.name}`} onClick={() => removePantry([item.id])} className="text-muted hover:text-coral"><Icon name="close" size={17} /></button>

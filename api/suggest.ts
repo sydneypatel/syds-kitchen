@@ -86,7 +86,7 @@ export async function handleSuggest(request: Request, env: Env, opts: { skipAuth
   const prompt = [
     `Suggest ${count} recipes for a home cook. Follow their kitchen setup and notes below.`,
     `Time budget: ${minutes} minutes total, which includes about ${eat} minutes to eat. So prep + cook + cleanup must be at most ${Math.max(minutes - eat, 10)} minutes.`,
-    `Ingredients on hand: ${list(body.pantry?.slice(0, 80))}.`,
+    `Ingredients on hand (amounts in parentheses when known; don't call for more than they have): ${list(body.pantry?.slice(0, 80))}.`,
     body.staples?.length ? `Spices, sauces and oils on hand (use these for flavor; avoid calling for seasonings not on this list unless essential): ${body.staples.slice(0, 80).join(", ")}.` : "",
     body.useSoon?.length ? `Perishables by urgency (use the first ones first; build at least one idea around the most urgent): ${body.useSoon.join(", ")}.` : "",
     "Favor using up fresh produce, dairy, meat and fish before shelf-stable items like grains, cans and pasta.",
