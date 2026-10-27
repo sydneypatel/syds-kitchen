@@ -1,4 +1,4 @@
-# Syd's Kitchen: personal meal prep app
+# My Kitchen: personal meal prep app
 
 My own meal-planning app, built from the Kindred Figma Make prototype (HCI class). It runs on a laptop or phone, syncs through Supabase, and is hosted on Vercel. Everything runs on free tiers; the only cost is the Claude API, at fractions of a cent per idea request.
 

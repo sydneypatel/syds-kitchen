@@ -62,7 +62,7 @@ export function Browse() {
       {busy ? <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">{Array.from({ length: 8 }, (_, i) => <div key={i} className="aspect-[4/5] animate-pulse rounded-3xl bg-white/70" />)}</div>
         : results.length ? <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">{results.map((m) => <button key={m.id} onClick={() => open(m)} disabled={!!opening} className="card text-left transition-transform hover:-translate-y-0.5 disabled:opacity-100"><img src={m.image} alt={m.title} loading="lazy" className="aspect-square w-full object-cover" /><span className="flex items-center justify-between gap-2 p-3.5"><span className="font-display text-base leading-tight">{m.title}</span>{opening === m.id ? <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-coral border-t-transparent" /> : <Icon name="arrow" size={15} />}</span></button>)}</div>
         : <div className="mt-6"><Empty title="No recipes found" copy={by === "ingredient" ? "TheMealDB matches one main ingredient at a time. Try a simpler word, like 'chicken' instead of 'chicken thighs'." : "Try a different name."} /></div>}
-      <p className="mt-8 text-center text-xs text-muted">Recipes from <a href="https://www.themealdb.com" target="_blank" rel="noreferrer" className="underline">TheMealDB</a>. Their times aren't listed, so Syd’s Kitchen estimates them; edit after saving.</p>
+      <p className="mt-8 text-center text-xs text-muted">Recipes from <a href="https://www.themealdb.com" target="_blank" rel="noreferrer" className="underline">TheMealDB</a>. Their times aren't listed, so My Kitchen estimates them; edit after saving.</p>
     </Page>
   </main>;
 }

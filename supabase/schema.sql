@@ -1,4 +1,4 @@
--- Syd's Kitchen database schema. Paste into Supabase → SQL Editor → Run. Safe to re-run.
+-- My Kitchen database schema. Paste into Supabase → SQL Editor → Run. Safe to re-run.
 -- Every row belongs to the signed-in user (user_id defaults to auth.uid()), and
 -- Row Level Security makes sure each user can only see and change their own rows.
 

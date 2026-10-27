@@ -8,7 +8,7 @@ const HERO = "https://images.unsplash.com/photo-1543353071-873f17a7a088?auto=for
 const isHomeScreenApp = () => window.matchMedia?.("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
 
 export function Login() {
-  const [mode, setMode] = useState<"password" | "link">(() => (localStorage.getItem("syds-kitchen:login-mode") === "link" && !isHomeScreenApp() ? "link" : "password"));
+  const [mode, setMode] = useState<"password" | "link">(() => (localStorage.getItem("my-kitchen:login-mode") === "link" && !isHomeScreenApp() ? "link" : "password"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [sent, setSent] = useState(false);
@@ -19,7 +19,7 @@ export function Login() {
     setMode(m);
     setError(null);
     try {
-      localStorage.setItem("syds-kitchen:login-mode", m);
+      localStorage.setItem("my-kitchen:login-mode", m);
     } catch {
       /* ignore */
     }

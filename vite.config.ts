@@ -12,7 +12,7 @@ type Handler = (request: Request, env: Record<string, string | undefined>, opts:
 function devApi(env: Record<string, string>): Plugin {
   const routes: Record<string, Handler> = { "/api/suggest": handleSuggest, "/api/import": handleImport };
   return {
-    name: "syds-kitchen-dev-api",
+    name: "my-kitchen-dev-api",
     apply: "serve",
     configureServer(server) {
       for (const [route, handler] of Object.entries(routes)) {

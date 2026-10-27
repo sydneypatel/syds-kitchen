@@ -1,6 +1,6 @@
 {
-  "name": "Syd's Kitchen",
-  "short_name": "Syd's Kitchen",
+  "name": "My Kitchen",
+  "short_name": "My Kitchen",
   "description": "My personal meal planning and prepping app.",
   "start_url": "/",
   "scope": "/",

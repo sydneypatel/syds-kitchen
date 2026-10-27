@@ -98,7 +98,7 @@ export const DEFAULT_PROFILE: Omit<Profile, "id"> = {
   skill: [],
   notes: "",
   eat_minutes: 15,
-  store: "Gristedes · Roosevelt Island",
+  store: "",
 };
 
 /** A recipe draft before it's saved (from AI, TheMealDB, or the form). */

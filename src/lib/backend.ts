@@ -66,7 +66,7 @@ export function supabaseBackend(sb: SupabaseClient, userId: string, email: strin
 
 /* ---------------- Local (browser) ---------------- */
 
-const KEY = "syds-kitchen:data:v1";
+const KEY = "my-kitchen:data:v1";
 
 function read(): Data {
   try {

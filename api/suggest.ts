@@ -84,7 +84,7 @@ export async function handleSuggest(request: Request, env: Env, opts: { skipAuth
   const list = (xs?: string[]) => (xs && xs.length ? xs.join(", ") : "none given");
 
   const prompt = [
-    `Suggest ${count} recipes for a grad student cooking in a small shared apartment kitchen.`,
+    `Suggest ${count} recipes for a home cook. Follow their kitchen setup and notes below.`,
     `Time budget: ${minutes} minutes total, which includes about ${eat} minutes to eat. So prep + cook + cleanup must be at most ${Math.max(minutes - eat, 10)} minutes.`,
     `Ingredients on hand: ${list(body.pantry?.slice(0, 80))}.`,
     body.staples?.length ? `Spices, sauces and oils on hand (use these for flavor; avoid calling for seasonings not on this list unless essential): ${body.staples.slice(0, 80).join(", ")}.` : "",

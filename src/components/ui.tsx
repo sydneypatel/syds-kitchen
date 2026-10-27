@@ -37,7 +37,7 @@ export function Button({ children, onClick, variant = "primary", disabled = fals
 }
 
 export function Logo({ light = false }: { light?: boolean }) {
-  return <div className={`flex items-center gap-2 font-bold tracking-[-0.04em] ${light ? "text-white" : "text-ink"}`}><span className="grid size-8 place-items-center rounded-full bg-coral text-white"><Icon name="ingredients" size={17} /></span>Syd’s Kitchen</div>;
+  return <div className={`flex items-center gap-2 font-bold tracking-[-0.04em] ${light ? "text-white" : "text-ink"}`}><span className="grid size-8 place-items-center rounded-full bg-coral text-white"><Icon name="ingredients" size={17} /></span>My Kitchen</div>;
 }
 
 /** Top bar. On phones it shows the logo or a back button; on laptops the sidebar has the logo. */
